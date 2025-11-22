@@ -124,9 +124,15 @@ const createOrder = async (req, res, next) => {
       });
     }
 
+    // Generate unique order number
+    const timestamp = Date.now().toString(36);
+    const random = Math.random().toString(36).substr(2, 5);
+    const orderNumber = `ORD-${timestamp}-${random}`.toUpperCase();
+
     // Create order
     const order = await Order.create({
       user: req.user._id,
+      orderNumber,
       courses: cart.items.map(item => ({
         course: item.course._id,
         price: item.price,
