@@ -10,6 +10,7 @@ const industryRoutes = require('./routes/industryRoutes');
 const uploadRoutes = require('./routes/uploadRoutes');
 const cartRoutes = require('./routes/cartRoutes');
 const orderRoutes = require('./routes/orderRoutes');
+const enrollmentRoutes = require('./routes/enrollmentRoutes');
 
 const app = express();
 
@@ -69,6 +70,7 @@ app.use('/api/industries', industryRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/cart', cartRoutes);
 app.use('/api/orders', orderRoutes);
+app.use('/api/enrollments', enrollmentRoutes);
 
 // 404 handler - catch all unmatched routes
 app.use((req, res) => {

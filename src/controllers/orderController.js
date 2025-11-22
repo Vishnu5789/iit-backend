@@ -1,6 +1,7 @@
 const Order = require('../models/Order');
 const Cart = require('../models/Cart');
 const Course = require('../models/Course');
+const User = require('../models/User');
 const Razorpay = require('razorpay');
 const crypto = require('crypto');
 
@@ -151,6 +152,13 @@ const createOrder = async (req, res, next) => {
       status: 'processing'
     });
 
+    // Enroll user in purchased courses
+    const courseIds = cart.items.map(item => item.course._id);
+    await User.findByIdAndUpdate(
+      req.user._id,
+      { $addToSet: { enrolledCourses: { $each: courseIds } } }
+    );
+
     // Clear cart after order creation
     cart.items = [];
     await cart.save();
@@ -161,7 +169,7 @@ const createOrder = async (req, res, next) => {
 
     res.status(201).json({
       success: true,
-      message: 'Order created successfully',
+      message: 'Order created successfully. You can now access your courses.',
       data: populatedOrder
     });
   } catch (error) {
