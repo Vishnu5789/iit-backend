@@ -16,6 +16,7 @@ const app = express();
 // CORS configuration
 const allowedOrigins = [
   'https://iit-frontend-ql6n.vercel.app',
+  'https://iit-frontend-ql6n-git-master-vishnus-projects-731f8db2.vercel.app',
   process.env.FRONTEND_URL,
   'http://localhost:5173',
   'http://localhost:3000'
