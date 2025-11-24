@@ -11,6 +11,8 @@ const uploadRoutes = require('./routes/uploadRoutes');
 const cartRoutes = require('./routes/cartRoutes');
 const orderRoutes = require('./routes/orderRoutes');
 const enrollmentRoutes = require('./routes/enrollmentRoutes');
+const homeConfigRoutes = require('./routes/homeConfigRoutes');
+const userManagementRoutes = require('./routes/userManagementRoutes');
 
 const app = express();
 
@@ -71,6 +73,8 @@ app.use('/api/upload', uploadRoutes);
 app.use('/api/cart', cartRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/enrollments', enrollmentRoutes);
+app.use('/api/home-config', homeConfigRoutes);
+app.use('/api/admin/users', userManagementRoutes);
 
 // 404 handler - catch all unmatched routes
 app.use((req, res) => {
