@@ -1,5 +1,7 @@
 const express = require('express');
 const cors = require('cors');
+const session = require('express-session');
+const passport = require('./config/passport');
 const errorHandler = require('./middleware/errorHandler');
 
 // Import routes
@@ -13,6 +15,10 @@ const orderRoutes = require('./routes/orderRoutes');
 const enrollmentRoutes = require('./routes/enrollmentRoutes');
 const homeConfigRoutes = require('./routes/homeConfigRoutes');
 const userManagementRoutes = require('./routes/userManagementRoutes');
+const contactRoutes = require('./routes/contactRoutes');
+const aboutRoutes = require('./routes/aboutRoutes');
+const industryConfigRoutes = require('./routes/industryConfigRoutes');
+const oauthRoutes = require('./routes/oauthRoutes');
 
 const app = express();
 
@@ -47,6 +53,22 @@ app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Session middleware (required for Passport)
+app.use(session({
+  secret: process.env.SESSION_SECRET || 'your-session-secret-change-in-production',
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    secure: process.env.NODE_ENV === 'production',
+    httpOnly: true,
+    maxAge: 24 * 60 * 60 * 1000 // 24 hours
+  }
+}));
+
+// Initialize Passport
+app.use(passport.initialize());
+app.use(passport.session());
+
 // Request logging middleware (development only)
 if (process.env.NODE_ENV === 'development') {
   app.use((req, res, next) => {
@@ -66,6 +88,7 @@ app.get('/health', (req, res) => {
 
 // API routes
 app.use('/api/auth', authRoutes);
+app.use('/api/auth', oauthRoutes); // OAuth routes
 app.use('/api/courses', courseRoutes);
 app.use('/api/blogs', blogRoutes);
 app.use('/api/industries', industryRoutes);
@@ -75,6 +98,9 @@ app.use('/api/orders', orderRoutes);
 app.use('/api/enrollments', enrollmentRoutes);
 app.use('/api/home-config', homeConfigRoutes);
 app.use('/api/admin/users', userManagementRoutes);
+app.use('/api/contact', contactRoutes);
+app.use('/api/about', aboutRoutes);
+app.use('/api/industry', industryConfigRoutes);
 
 // 404 handler - catch all unmatched routes
 app.use((req, res) => {

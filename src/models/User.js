@@ -22,9 +22,21 @@ const userSchema = new mongoose.Schema({
   },
   password: {
     type: String,
-    required: [true, 'Please provide a password'],
+    required: function() {
+      // Password is only required if no OAuth provider is used
+      return !this.oauthProvider;
+    },
     minlength: [8, 'Password must be at least 8 characters long'],
     select: false // Don't return password by default in queries
+  },
+  oauthProvider: {
+    type: String,
+    enum: ['google', null],
+    default: null
+  },
+  oauthId: {
+    type: String,
+    default: null
   },
   role: {
     type: String,
