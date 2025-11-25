@@ -114,20 +114,27 @@ const uploadFile = async (req, res, next) => {
     // Generate public URL (for buckets with public read policy)
     const fileUrl = `${bucketUrl}/${key}`;
 
-    // Also generate a presigned URL for immediate access (valid for 1 hour)
-    // This works even if bucket is private
-    const command = new GetObjectCommand({
-      Bucket: bucketName,
-      Key: key
-    });
-    const presignedUrl = await getSignedUrl(s3Client, command, { expiresIn: 3600 });
+    // Define which folders are public (no presigned URL needed)
+    const publicFolders = ['courses', 'homepage', 'about', 'team', 'course-syllabuses', 'blog', 'industries'];
+    const isPublicFolder = publicFolders.some(pubFolder => folder.startsWith(pubFolder));
+
+    // For public folders, just return the public URL
+    // For private folders (videos, materials), generate presigned URL
+    let presignedUrl = null;
+    if (!isPublicFolder) {
+      const command = new GetObjectCommand({
+        Bucket: bucketName,
+        Key: key
+      });
+      presignedUrl = await getSignedUrl(s3Client, command, { expiresIn: 3600 });
+    }
 
     res.status(200).json({
       success: true,
       message: 'File uploaded successfully',
       data: {
-        url: fileUrl, // Public URL (if bucket policy allows)
-        presignedUrl: presignedUrl, // Temporary presigned URL (works even if private)
+        url: fileUrl, // Public URL (for public folders this is all you need)
+        presignedUrl: presignedUrl, // Only set for private folders
         fileId: key, // S3 key serves as fileId
         name: uniqueFileName,
         fileType: contentType,
