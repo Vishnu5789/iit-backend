@@ -12,6 +12,21 @@ const courseSchema = new mongoose.Schema({
     required: [true, 'Please provide a course description'],
     maxlength: [1000, 'Description cannot exceed 1000 characters']
   },
+  syllabus: {
+    url: {
+      type: String,
+      required: [true, 'Please upload course syllabus'],
+      default: ''
+    },
+    fileId: {
+      type: String,
+      default: ''
+    },
+    name: {
+      type: String,
+      default: ''
+    }
+  },
   duration: {
     type: String,
     required: [true, 'Please provide course duration'],

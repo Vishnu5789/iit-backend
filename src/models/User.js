@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
+const crypto = require('crypto');
 
 const userSchema = new mongoose.Schema({
   fullName: {
@@ -111,6 +112,23 @@ userSchema.methods.getPublicProfile = function() {
     bio: this.bio,
     createdAt: this.createdAt
   };
+};
+
+// Generate password reset token
+userSchema.methods.getResetPasswordToken = function() {
+  // Generate token
+  const resetToken = crypto.randomBytes(32).toString('hex');
+  
+  // Hash token and set to resetPasswordToken field
+  this.resetPasswordToken = crypto
+    .createHash('sha256')
+    .update(resetToken)
+    .digest('hex');
+  
+  // Set expiry time (1 hour from now)
+  this.resetPasswordExpire = Date.now() + 60 * 60 * 1000; // 1 hour
+  
+  return resetToken;
 };
 
 // Note: email index is automatically created by the 'unique: true' property
