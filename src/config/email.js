@@ -23,12 +23,8 @@ const sendEmail = async (options) => {
       to: options.to,
       subject: options.subject,
       html: options.html,
-      // Generate plain text from HTML if not provided
-      text: options.text || options.html.replace(/<[^>]*>/g, ''),
-      headers: {
-        'Content-Type': 'text/html; charset=UTF-8',
-        'MIME-Version': '1.0'
-      }
+      encoding: 'base64', // Use base64 instead of quoted-printable to prevent URL encoding issues
+      textEncoding: 'base64'
     };
 
     const info = await transporter.sendMail(mailOptions);
