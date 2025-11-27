@@ -228,7 +228,69 @@ const getAuthParams = async (req, res, next) => {
 };
 
 /**
- * @desc    Generate presigned URL for a file
+ * @desc    Generate presigned URL for direct upload (bypasses server)
+ * @route   POST /api/upload/presigned-upload
+ * @access  Private (authenticated users only)
+ */
+const getPresignedUploadUrl = async (req, res, next) => {
+  try {
+    if (!s3Client || !bucketName) {
+      return res.status(503).json({
+        success: false,
+        message: 'AWS S3 is not configured.'
+      });
+    }
+
+    const { filename, folder = 'uploads', contentType } = req.body;
+
+    if (!filename) {
+      return res.status(400).json({
+        success: false,
+        message: 'Filename is required'
+      });
+    }
+
+    // Generate unique filename
+    const uniqueFilename = generateUniqueFileName(filename);
+    const key = `${folder}/${uniqueFilename}`;
+
+    // Determine content type
+    const fileContentType = contentType || getContentType(filename);
+
+    // Create PutObjectCommand for upload
+    const command = new PutObjectCommand({
+      Bucket: bucketName,
+      Key: key,
+      ContentType: fileContentType
+    });
+
+    // Generate presigned URL for upload (valid for 1 hour)
+    const presignedUrl = await getSignedUrl(s3Client, command, { 
+      expiresIn: 3600 
+    });
+
+    res.status(200).json({
+      success: true,
+      data: {
+        uploadUrl: presignedUrl,
+        key: key,
+        url: `${bucketUrl}/${key}`, // Final URL after upload
+        fileId: key,
+        expiresIn: 3600
+      }
+    });
+  } catch (error) {
+    console.error('Presigned upload URL generation error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to generate presigned upload URL',
+      error: error.message
+    });
+  }
+};
+
+/**
+ * @desc    Generate presigned URL for downloading a file
  * @route   GET /api/upload/presigned/:fileId
  * @access  Public (anyone can get presigned URL for existing files)
  */
@@ -280,5 +342,6 @@ module.exports = {
   uploadFile,
   deleteFile,
   getAuthParams,
-  getPresignedUrl
+  getPresignedUrl,
+  getPresignedUploadUrl
 };
