@@ -56,6 +56,7 @@ const courseSchema = new mongoose.Schema({
   thumbnail: {
     url: {
       type: String,
+      required: [true, 'Please upload course thumbnail'],
       default: ''
     },
     fileId: {
@@ -63,36 +64,60 @@ const courseSchema = new mongoose.Schema({
       default: ''
     }
   },
-  sampleVideos: [{
-    name: String,
-    url: String,
-    fileId: String,
-    duration: String,
-    description: String,
-    uploadedAt: {
-      type: Date,
-      default: Date.now
+  sampleVideos: {
+    type: [{
+      name: String,
+      url: String,
+      fileId: String,
+      duration: String,
+      description: String,
+      uploadedAt: {
+        type: Date,
+        default: Date.now
+      }
+    }],
+    validate: {
+      validator: function(arr) {
+        return arr && arr.length > 0;
+      },
+      message: 'At least one sample video is required'
     }
-  }],
-  pdfFiles: [{
-    name: String,
-    url: String,
-    fileId: String,
-    uploadedAt: {
-      type: Date,
-      default: Date.now
+  },
+  pdfFiles: {
+    type: [{
+      name: String,
+      url: String,
+      fileId: String,
+      uploadedAt: {
+        type: Date,
+        default: Date.now
+      }
+    }],
+    validate: {
+      validator: function(arr) {
+        return arr && arr.length > 0;
+      },
+      message: 'At least one PDF material is required'
     }
-  }],
-  videoFiles: [{
-    name: String,
-    url: String,
-    fileId: String,
-    duration: String,
-    uploadedAt: {
-      type: Date,
-      default: Date.now
+  },
+  videoFiles: {
+    type: [{
+      name: String,
+      url: String,
+      fileId: String,
+      duration: String,
+      uploadedAt: {
+        type: Date,
+        default: Date.now
+      }
+    }],
+    validate: {
+      validator: function(arr) {
+        return arr && arr.length > 0;
+      },
+      message: 'At least one video lesson is required'
     }
-  }],
+  },
   images: [{
     url: String,
     fileId: String,
@@ -100,6 +125,23 @@ const courseSchema = new mongoose.Schema({
       type: Date,
       default: Date.now
     }
+  }],
+  keyPoints: [{
+    type: String,
+    required: true
+  }],
+  aboutCourse: {
+    type: String,
+    required: [true, 'Please provide about course information'],
+    maxlength: [2000, 'About course cannot exceed 2000 characters']
+  },
+  eligibility: [{
+    type: String,
+    required: true
+  }],
+  objectives: [{
+    type: String,
+    required: true
   }],
   isActive: {
     type: Boolean,
