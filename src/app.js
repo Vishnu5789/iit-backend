@@ -22,37 +22,64 @@ const oauthRoutes = require('./routes/oauthRoutes');
 
 const app = express();
 
-// CORS configuration
-const allowedOrigins = [
-  'https://iit-frontend-ql6n.vercel.app',
-  'https://iit-frontend-ql6n-git-master-vishnus-projects-731f8db2.vercel.app',
-  process.env.FRONTEND_URL,
-  'http://localhost:5173',
-  'http://localhost:3000'
-].filter(Boolean);
+// CORS configuration - Read from environment variables
+const getAllowedOrigins = () => {
+  const origins = [];
+  
+  // Add origins from env (comma-separated)
+  if (process.env.ALLOWED_ORIGINS) {
+    const envOrigins = process.env.ALLOWED_ORIGINS.split(',').map(o => o.trim()).filter(Boolean);
+    origins.push(...envOrigins);
+  }
+  
+  // Add FRONTEND_URL if specified
+  if (process.env.FRONTEND_URL) {
+    origins.push(process.env.FRONTEND_URL);
+  }
+  
+  // Always allow localhost for development
+  origins.push('http://localhost:5173', 'http://localhost:3000', 'http://localhost:5174');
+  
+  return [...new Set(origins)]; // Remove duplicates
+};
+
+const allowedOrigins = getAllowedOrigins();
+
+console.log('🔐 CORS Allowed Origins:', allowedOrigins);
 
 const corsOptions = {
   origin: function (origin, callback) {
-    // Allow requests with no origin (like mobile apps or curl requests)
+    // Allow requests with no origin (like mobile apps, curl, or Postman)
     if (!origin) return callback(null, true);
     
-    // Check if origin is in allowed list or matches Vercel pattern
-    const isAllowed = allowedOrigins.indexOf(origin) !== -1 || 
-                      origin.includes('vercel.app') || 
-                      origin.includes('isaactechie.com') ||
-                      origin.startsWith('http://localhost');
-    
-    if (isAllowed) {
-      callback(null, true);
-    } else {
-      console.warn('CORS blocked origin:', origin);
-      callback(new Error('Not allowed by CORS'));
+    // Check if origin is in the allowed list
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
     }
+    
+    // Allow any Vercel deployment URL
+    if (origin.includes('vercel.app')) {
+      return callback(null, true);
+    }
+    
+    // Allow your domain and subdomains
+    if (origin.includes('isaactechie.com')) {
+      return callback(null, true);
+    }
+    
+    // Allow localhost with any port
+    if (origin.startsWith('http://localhost:')) {
+      return callback(null, true);
+    }
+    
+    // Block all other origins
+    console.warn('⚠️  CORS blocked origin:', origin);
+    callback(new Error('Not allowed by CORS'));
   },
   credentials: true,
   optionsSuccessStatus: 200,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
 };
 
 // Middleware
