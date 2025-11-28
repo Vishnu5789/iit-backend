@@ -36,9 +36,16 @@ const corsOptions = {
     // Allow requests with no origin (like mobile apps or curl requests)
     if (!origin) return callback(null, true);
     
-    if (allowedOrigins.indexOf(origin) !== -1) {
+    // Check if origin is in allowed list or matches Vercel pattern
+    const isAllowed = allowedOrigins.indexOf(origin) !== -1 || 
+                      origin.includes('vercel.app') || 
+                      origin.includes('isaactechie.com') ||
+                      origin.startsWith('http://localhost');
+    
+    if (isAllowed) {
       callback(null, true);
     } else {
+      console.warn('CORS blocked origin:', origin);
       callback(new Error('Not allowed by CORS'));
     }
   },
