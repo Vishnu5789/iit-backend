@@ -126,6 +126,28 @@ const courseSchema = new mongoose.Schema({
       default: Date.now
     }
   }],
+  textContent: [{
+    title: String,
+    content: String,
+    uploadedAt: {
+      type: Date,
+      default: Date.now
+    }
+  }],
+  externalVideoLinks: [{
+    title: String,
+    url: String,
+    description: String,
+    platform: {
+      type: String,
+      enum: ['youtube', 'vimeo', 'other'],
+      default: 'other'
+    },
+    uploadedAt: {
+      type: Date,
+      default: Date.now
+    }
+  }],
   keyPoints: [{
     type: String,
     required: true

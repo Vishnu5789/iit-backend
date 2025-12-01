@@ -19,6 +19,11 @@ const contactRoutes = require('./routes/contactRoutes');
 const aboutRoutes = require('./routes/aboutRoutes');
 const industryConfigRoutes = require('./routes/industryConfigRoutes');
 const oauthRoutes = require('./routes/oauthRoutes');
+const contactWidgetRoutes = require('./routes/contactWidgetRoutes');
+const instructorRoutes = require('./routes/instructorRoutes');
+const heroSlideRoutes = require('./routes/heroSlideRoutes');
+const quizRoutes = require('./routes/quizRoutes');
+const certificateRoutes = require('./routes/certificateRoutes');
 
 const app = express();
 
@@ -135,6 +140,11 @@ app.use('/api/admin/users', userManagementRoutes);
 app.use('/api/contact', contactRoutes);
 app.use('/api/about', aboutRoutes);
 app.use('/api/industry', industryConfigRoutes);
+app.use('/api/contact-widget', contactWidgetRoutes);
+app.use('/api/instructors', instructorRoutes);
+app.use('/api/hero-slides', heroSlideRoutes);
+app.use('/api/quizzes', quizRoutes);
+app.use('/api/certificates', certificateRoutes);
 
 // 404 handler - catch all unmatched routes
 app.use((req, res) => {
