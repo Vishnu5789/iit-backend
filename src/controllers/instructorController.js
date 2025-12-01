@@ -1,16 +1,41 @@
 const Instructor = require('../models/Instructor');
+const User = require('../models/User');
 
 // Get all instructors (public)
 exports.getInstructors = async (req, res) => {
   try {
+    // Get instructors from Instructor collection
     const instructors = await Instructor.find({ isActive: true })
       .sort({ order: 1, createdAt: -1 })
       .select('-createdBy');
     
+    // Get users with instructor role
+    const instructorUsers = await User.find({ role: 'instructor' })
+      .select('fullName email profileImage bio createdAt');
+    
+    // Transform user data to match instructor format
+    const transformedUsers = instructorUsers.map(user => ({
+      _id: user._id,
+      name: user.fullName,
+      title: 'Instructor',
+      description: user.bio || 'Instructor at our institution',
+      profileImage: {
+        url: user.profileImage || '',
+        fileId: ''
+      },
+      email: user.email,
+      isActive: true,
+      createdAt: user.createdAt,
+      isFromUserCollection: true // Flag to identify source
+    }));
+    
+    // Combine both sources
+    const allInstructors = [...instructors, ...transformedUsers];
+    
     res.json({
       success: true,
-      count: instructors.length,
-      data: instructors
+      count: allInstructors.length,
+      data: allInstructors
     });
   } catch (error) {
     console.error('Error fetching instructors:', error);
@@ -51,14 +76,40 @@ exports.getInstructor = async (req, res) => {
 // Get all instructors for admin (includes inactive)
 exports.getAllInstructorsAdmin = async (req, res) => {
   try {
+    // Get instructors from Instructor collection (includes inactive)
     const instructors = await Instructor.find()
       .sort({ order: 1, createdAt: -1 })
       .populate('createdBy', 'fullName email');
     
+    // Get users with instructor role
+    const instructorUsers = await User.find({ role: 'instructor' })
+      .select('fullName email profileImage bio createdAt isVerified');
+    
+    // Transform user data to match instructor format
+    const transformedUsers = instructorUsers.map(user => ({
+      _id: user._id,
+      name: user.fullName,
+      title: 'Instructor',
+      description: user.bio || 'Instructor at our institution',
+      profileImage: {
+        url: user.profileImage || '',
+        fileId: ''
+      },
+      email: user.email,
+      isActive: true,
+      order: 999, // Place user-based instructors at the end
+      createdAt: user.createdAt,
+      isFromUserCollection: true, // Flag to identify source
+      isVerified: user.isVerified
+    }));
+    
+    // Combine both sources
+    const allInstructors = [...instructors, ...transformedUsers];
+    
     res.json({
       success: true,
-      count: instructors.length,
-      data: instructors
+      count: allInstructors.length,
+      data: allInstructors
     });
   } catch (error) {
     console.error('Error fetching instructors:', error);

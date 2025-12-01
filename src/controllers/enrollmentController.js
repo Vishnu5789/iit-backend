@@ -113,9 +113,63 @@ const getCourseContent = async (req, res, next) => {
   }
 };
 
+/**
+ * @desc    Admin self-enrollment (no payment required)
+ * @route   POST /api/enrollments/admin-enroll/:courseId
+ * @access  Private (Admin only)
+ */
+const adminSelfEnroll = async (req, res, next) => {
+  try {
+    const { courseId } = req.params;
+
+    // Check if user is admin
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({
+        success: false,
+        message: 'Only admins can use this endpoint'
+      });
+    }
+
+    // Check if course exists
+    const course = await Course.findById(courseId);
+    if (!course) {
+      return res.status(404).json({
+        success: false,
+        message: 'Course not found'
+      });
+    }
+
+    // Check if already enrolled
+    const user = await User.findById(req.user._id);
+    if (user.enrolledCourses.includes(courseId)) {
+      return res.status(400).json({
+        success: false,
+        message: 'You are already enrolled in this course'
+      });
+    }
+
+    // Enroll admin in course
+    user.enrolledCourses.push(courseId);
+    await user.save();
+
+    res.status(200).json({
+      success: true,
+      message: `Successfully enrolled in ${course.title}`,
+      data: {
+        courseId: course._id,
+        courseTitle: course.title
+      }
+    });
+  } catch (error) {
+    console.error('Admin self-enroll error:', error);
+    next(error);
+  }
+};
+
 module.exports = {
   getEnrolledCourses,
   checkEnrollment,
-  getCourseContent
+  getCourseContent,
+  adminSelfEnroll
 };
 

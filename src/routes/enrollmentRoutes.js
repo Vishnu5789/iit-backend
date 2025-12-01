@@ -4,7 +4,8 @@ const { protect } = require('../middleware/auth');
 const {
   getEnrolledCourses,
   checkEnrollment,
-  getCourseContent
+  getCourseContent,
+  adminSelfEnroll
 } = require('../controllers/enrollmentController');
 
 // All enrollment routes require authentication
@@ -18,6 +19,9 @@ router.get('/check/:courseId', checkEnrollment);
 
 // Get course content (only for enrolled users)
 router.get('/course/:courseId/content', getCourseContent);
+
+// Admin self-enrollment (no payment required)
+router.post('/admin-enroll/:courseId', adminSelfEnroll);
 
 module.exports = router;
 
