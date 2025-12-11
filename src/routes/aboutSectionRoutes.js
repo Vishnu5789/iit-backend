@@ -27,3 +27,4 @@ router.delete('/admin/:id', protect, checkAdmin, deleteAboutSection);
 
 module.exports = router;
 
+
