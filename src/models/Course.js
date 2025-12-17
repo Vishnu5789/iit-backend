@@ -83,6 +83,46 @@ const courseSchema = new mongoose.Schema({
       message: 'At least one sample video is required'
     }
   },
+  // Folder-based media organization
+  mediaFolders: [{
+    folderName: {
+      type: String,
+      required: true,
+      trim: true
+    },
+    videos: [{
+      name: String,
+      url: String,
+      fileId: String,
+      duration: String,
+      uploadedAt: {
+        type: Date,
+        default: Date.now
+      }
+    }],
+    pdfs: [{
+      name: String,
+      url: String,
+      fileId: String,
+      uploadedAt: {
+        type: Date,
+        default: Date.now
+      }
+    }],
+    images: [{
+      url: String,
+      fileId: String,
+      uploadedAt: {
+        type: Date,
+        default: Date.now
+      }
+    }],
+    createdAt: {
+      type: Date,
+      default: Date.now
+    }
+  }],
+  // Keep old fields for backward compatibility (deprecated)
   pdfFiles: {
     type: [{
       name: String,
@@ -93,12 +133,7 @@ const courseSchema = new mongoose.Schema({
         default: Date.now
       }
     }],
-    validate: {
-      validator: function(arr) {
-        return arr && arr.length > 0;
-      },
-      message: 'At least one PDF material is required'
-    }
+    default: []
   },
   videoFiles: {
     type: [{
@@ -111,12 +146,7 @@ const courseSchema = new mongoose.Schema({
         default: Date.now
       }
     }],
-    validate: {
-      validator: function(arr) {
-        return arr && arr.length > 0;
-      },
-      message: 'At least one video lesson is required'
-    }
+    default: []
   },
   images: [{
     url: String,
@@ -176,6 +206,28 @@ const courseSchema = new mongoose.Schema({
   }
 }, {
   timestamps: true
+});
+
+// Custom validation for media folders
+courseSchema.pre('validate', function(next) {
+  // If using new folder structure, validate folders have content
+  if (this.mediaFolders && this.mediaFolders.length > 0) {
+    const hasContent = this.mediaFolders.some(folder => 
+      (folder.videos && folder.videos.length > 0) ||
+      (folder.pdfs && folder.pdfs.length > 0) ||
+      (folder.images && folder.images.length > 0)
+    );
+    if (!hasContent) {
+      return next(new Error('At least one folder must contain media content (videos, PDFs, or images)'));
+    }
+  } else {
+    // Fallback: validate old structure if no folders
+    if ((!this.videoFiles || this.videoFiles.length === 0) && 
+        (!this.pdfFiles || this.pdfFiles.length === 0)) {
+      return next(new Error('At least one video or PDF is required'));
+    }
+  }
+  next();
 });
 
 // Index for faster queries

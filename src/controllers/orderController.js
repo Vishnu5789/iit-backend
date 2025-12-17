@@ -125,16 +125,44 @@ const createOrder = async (req, res, next) => {
       });
     }
 
+    // Get user to check enrolled courses
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    // Filter out courses user already owns
+    const alreadyEnrolledCourses = user.enrolledCourses || [];
+    const newCartItems = cart.items.filter(item => 
+      !alreadyEnrolledCourses.includes(item.course._id.toString())
+    );
+
+    if (newCartItems.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'You are already enrolled in all courses in your cart'
+      });
+    }
+
+    // If some courses were filtered out, update the cart
+    if (newCartItems.length < cart.items.length) {
+      cart.items = newCartItems;
+      await cart.save();
+    }
+
     // Generate unique order number
     const timestamp = Date.now().toString(36);
     const random = Math.random().toString(36).substr(2, 5);
     const orderNumber = `ORD-${timestamp}-${random}`.toUpperCase();
 
-    // Create order
+    // Create order with filtered items (only courses user doesn't own)
     const order = await Order.create({
       user: req.user._id,
       orderNumber,
-      courses: cart.items.map(item => ({
+      courses: newCartItems.map(item => ({
         course: item.course._id,
         price: item.price,
         discountPrice: item.discountPrice,
@@ -146,14 +174,20 @@ const createOrder = async (req, res, next) => {
         status: payment?.status || 'completed',
         paidAt: payment?.status === 'completed' ? new Date() : null
       },
-      totalPrice: cart.totalPrice,
-      totalDiscount: cart.totalDiscount,
-      finalPrice: cart.finalPrice,
+      totalPrice: newCartItems.reduce((sum, item) => sum + item.price, 0),
+      totalDiscount: newCartItems.reduce((sum, item) => {
+        const discount = item.discountPrice > 0 ? (item.price - item.discountPrice) : 0;
+        return sum + discount;
+      }, 0),
+      finalPrice: newCartItems.reduce((sum, item) => {
+        const price = item.discountPrice > 0 ? item.discountPrice : item.price;
+        return sum + price;
+      }, 0),
       status: 'processing'
     });
 
-    // Enroll user in purchased courses
-    const courseIds = cart.items.map(item => item.course._id);
+    // Enroll user in purchased courses (only new courses)
+    const courseIds = newCartItems.map(item => item.course._id);
     await User.findByIdAndUpdate(
       req.user._id,
       { $addToSet: { enrolledCourses: { $each: courseIds } } }

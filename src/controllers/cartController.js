@@ -1,5 +1,6 @@
 const Cart = require('../models/Cart');
 const Course = require('../models/Course');
+const User = require('../models/User');
 
 /**
  * @desc    Get user's cart
@@ -13,6 +14,22 @@ const getCart = async (req, res, next) => {
 
     if (!cart) {
       cart = await Cart.create({ user: req.user._id, items: [] });
+    }
+
+    // Get user to check enrolled courses
+    const user = await User.findById(req.user._id);
+    if (user && user.enrolledCourses && user.enrolledCourses.length > 0) {
+      // Filter out courses user already owns
+      const enrolledCourseIds = user.enrolledCourses.map(id => id.toString());
+      const originalItemCount = cart.items.length;
+      cart.items = cart.items.filter(item => 
+        !enrolledCourseIds.includes(item.course._id.toString())
+      );
+      
+      // If items were removed, save the cart
+      if (cart.items.length < originalItemCount) {
+        await cart.save();
+      }
     }
 
     res.status(200).json({
@@ -53,6 +70,15 @@ const addToCart = async (req, res, next) => {
     let cart = await Cart.findOne({ user: req.user._id });
     if (!cart) {
       cart = new Cart({ user: req.user._id, items: [] });
+    }
+
+    // Check if user is already enrolled in this course
+    const user = await User.findById(req.user._id);
+    if (user && user.enrolledCourses && user.enrolledCourses.includes(courseId)) {
+      return res.status(400).json({
+        success: false,
+        message: 'You are already enrolled in this course'
+      });
     }
 
     // Check if course already in cart
