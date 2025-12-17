@@ -105,34 +105,55 @@ const corsOptions = {
 app.use(cors(corsOptions));
 
 // Ensure CORS headers are always present, even for 304 responses
+// Intercept response to add CORS headers before it's sent
 app.use((req, res, next) => {
   const origin = req.headers.origin;
   
-  // If origin is allowed, ensure CORS headers are set
-  if (origin) {
-    const normalizedOrigin = origin.toLowerCase().replace(/\/$/, '');
+  // Helper to check if origin is allowed
+  const isOriginAllowed = (originToCheck) => {
+    if (!originToCheck) return false;
+    const normalizedOrigin = originToCheck.toLowerCase().replace(/\/$/, '');
     const normalizedAllowedOrigins = allowedOrigins.map(o => o.toLowerCase().replace(/\/$/, ''));
-    const isAllowed = 
+    return (
       normalizedAllowedOrigins.includes(normalizedOrigin) ||
-      origin.includes('vercel.app') ||
-      origin.toLowerCase().includes('isaactechie.com') ||
-      origin.startsWith('http://localhost:') ||
-      origin.startsWith('https://localhost:');
-    
-    if (isAllowed) {
-      res.setHeader('Access-Control-Allow-Origin', origin);
-      res.setHeader('Access-Control-Allow-Credentials', 'true');
-      res.setHeader('Access-Control-Expose-Headers', 'ETag, Cache-Control, Content-Type');
-    }
+      originToCheck.includes('vercel.app') ||
+      originToCheck.toLowerCase().includes('isaactechie.com') ||
+      originToCheck.startsWith('http://localhost:') ||
+      originToCheck.startsWith('https://localhost:')
+    );
+  };
+  
+  // Set CORS headers immediately if origin is allowed
+  if (origin && isOriginAllowed(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+    res.setHeader('Access-Control-Expose-Headers', 'ETag, Cache-Control, Content-Type');
+    res.setHeader('Vary', 'Origin');
   }
   
   // Handle preflight OPTIONS requests
   if (req.method === 'OPTIONS') {
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin, Cache-Control, If-None-Match, If-Modified-Since');
-    res.setHeader('Access-Control-Max-Age', '86400');
-    return res.status(200).end();
+    if (origin && isOriginAllowed(origin)) {
+      res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+      res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin, Cache-Control, If-None-Match, If-Modified-Since');
+      res.setHeader('Access-Control-Max-Age', '86400');
+      return res.status(200).end();
+    }
   }
+  
+  // Intercept response finish to ensure headers are set even for 304
+  const originalEnd = res.end;
+  res.end = function(...args) {
+    // Ensure CORS headers are set before ending response
+    if (origin && isOriginAllowed(origin)) {
+      if (!res.getHeader('Access-Control-Allow-Origin')) {
+        res.setHeader('Access-Control-Allow-Origin', origin);
+        res.setHeader('Access-Control-Allow-Credentials', 'true');
+        res.setHeader('Access-Control-Expose-Headers', 'ETag, Cache-Control, Content-Type');
+      }
+    }
+    return originalEnd.apply(this, args);
+  };
   
   next();
 });

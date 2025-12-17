@@ -8,6 +8,30 @@ const ContactMessage = require('../models/ContactMessage');
  */
 const getContactConfig = async (req, res, next) => {
   try {
+    // Explicitly set CORS headers to ensure they're present even for cached responses
+    const origin = req.headers.origin;
+    if (origin) {
+      // Check if origin should be allowed (same logic as CORS middleware)
+      const normalizedOrigin = origin.toLowerCase().replace(/\/$/, '');
+      const isAllowed = 
+        origin.includes('vercel.app') ||
+        origin.toLowerCase().includes('isaactechie.com') ||
+        origin.startsWith('http://localhost:') ||
+        origin.startsWith('https://localhost:');
+      
+      if (isAllowed) {
+        res.setHeader('Access-Control-Allow-Origin', origin);
+        res.setHeader('Access-Control-Allow-Credentials', 'true');
+        res.setHeader('Access-Control-Expose-Headers', 'ETag, Cache-Control, Content-Type');
+        res.setHeader('Vary', 'Origin'); // Important for CORS caching
+      }
+    }
+    
+    // Disable caching to prevent 304 responses that might not include CORS headers
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+    
     let config = await ContactConfig.findOne();
     
     // If no config exists, create default
