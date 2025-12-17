@@ -56,25 +56,36 @@ console.log('🔐 CORS Allowed Origins:', allowedOrigins);
 const corsOptions = {
   origin: function (origin, callback) {
     // Allow requests with no origin (like mobile apps, curl, or Postman)
-    if (!origin) return callback(null, true);
+    if (!origin) {
+      console.log('✅ CORS: Allowing request with no origin');
+      return callback(null, true);
+    }
     
-    // Check if origin is in the allowed list
-    if (allowedOrigins.includes(origin)) {
+    // Normalize origin (remove trailing slash, convert to lowercase for comparison)
+    const normalizedOrigin = origin.toLowerCase().replace(/\/$/, '');
+    
+    // Check if origin is in the allowed list (case-insensitive)
+    const normalizedAllowedOrigins = allowedOrigins.map(o => o.toLowerCase().replace(/\/$/, ''));
+    if (normalizedAllowedOrigins.includes(normalizedOrigin)) {
+      console.log('✅ CORS: Allowing origin from ALLOWED_ORIGINS:', origin);
       return callback(null, true);
     }
     
     // Allow any Vercel deployment URL
     if (origin.includes('vercel.app')) {
+      console.log('✅ CORS: Allowing Vercel origin:', origin);
       return callback(null, true);
     }
     
-    // Allow your domain and subdomains
-    if (origin.includes('isaactechie.com')) {
+    // Allow your domain and subdomains (case-insensitive)
+    if (origin.toLowerCase().includes('isaactechie.com')) {
+      console.log('✅ CORS: Allowing isaactechie.com origin:', origin);
       return callback(null, true);
     }
     
     // Allow localhost with any port
-    if (origin.startsWith('http://localhost:')) {
+    if (origin.startsWith('http://localhost:') || origin.startsWith('https://localhost:')) {
+      console.log('✅ CORS: Allowing localhost origin:', origin);
       return callback(null, true);
     }
     
@@ -85,7 +96,9 @@ const corsOptions = {
   credentials: true,
   optionsSuccessStatus: 200,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin', 'Cache-Control', 'If-None-Match', 'If-Modified-Since'],
+  exposedHeaders: ['ETag', 'Cache-Control', 'Content-Type'],
+  maxAge: 86400 // 24 hours
 };
 
 // Middleware
