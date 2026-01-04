@@ -21,8 +21,42 @@ const blogSchema = new mongoose.Schema({
   content: {
     type: String,
     required: [true, 'Please provide blog content'],
-    maxlength: [10000, 'Content cannot exceed 10000 characters']
+    maxlength: [30000, 'Content cannot exceed 30000 characters']
   },
+  thumbnail: {
+    url: {
+      type: String,
+      default: ''
+    },
+    fileId: {
+      type: String,
+      default: ''
+    }
+  },
+  image: {
+    url: {
+      type: String,
+      default: ''
+    },
+    fileId: {
+      type: String,
+      default: ''
+    }
+  },
+  images: [{
+    url: {
+      type: String,
+      required: true
+    },
+    fileId: {
+      type: String,
+      required: true
+    },
+    uploadedAt: {
+      type: Date,
+      default: Date.now
+    }
+  }],
   readTime: {
     type: String,
     default: '5 min read'

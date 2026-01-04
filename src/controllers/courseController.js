@@ -7,6 +7,21 @@ const Course = require('../models/Course');
  */
 const getCourses = async (req, res, next) => {
   try {
+    // Check if only titles are requested (for dropdowns)
+    const { titlesOnly } = req.query;
+    
+    if (titlesOnly === 'true') {
+      const courses = await Course.find({ isActive: true })
+        .select('title _id')
+        .sort({ title: 1 });
+      
+      return res.status(200).json({
+        success: true,
+        count: courses.length,
+        data: courses
+      });
+    }
+    
     const courses = await Course.find({ isActive: true })
       .sort({ createdAt: -1 })
       .populate('createdBy', 'fullName email');

@@ -117,6 +117,46 @@ const courseSchema = new mongoose.Schema({
         default: Date.now
       }
     }],
+    textContent: [{
+      title: {
+        type: String,
+        required: true,
+        trim: true
+      },
+      content: {
+        type: String,
+        required: true
+      },
+      uploadedAt: {
+        type: Date,
+        default: Date.now
+      }
+    }],
+    externalVideoLinks: [{
+      title: {
+        type: String,
+        required: true,
+        trim: true
+      },
+      url: {
+        type: String,
+        required: true,
+        trim: true
+      },
+      description: {
+        type: String,
+        default: ''
+      },
+      platform: {
+        type: String,
+        enum: ['youtube', 'vimeo', 'other'],
+        default: 'other'
+      },
+      uploadedAt: {
+        type: Date,
+        default: Date.now
+      }
+    }],
     createdAt: {
       type: Date,
       default: Date.now
@@ -208,17 +248,19 @@ const courseSchema = new mongoose.Schema({
   timestamps: true
 });
 
-// Custom validation for media folders
+  // Custom validation for media folders
 courseSchema.pre('validate', function(next) {
   // If using new folder structure, validate folders have content
   if (this.mediaFolders && this.mediaFolders.length > 0) {
     const hasContent = this.mediaFolders.some(folder => 
       (folder.videos && folder.videos.length > 0) ||
       (folder.pdfs && folder.pdfs.length > 0) ||
-      (folder.images && folder.images.length > 0)
+      (folder.images && folder.images.length > 0) ||
+      (folder.textContent && folder.textContent.length > 0) ||
+      (folder.externalVideoLinks && folder.externalVideoLinks.length > 0)
     );
     if (!hasContent) {
-      return next(new Error('At least one folder must contain media content (videos, PDFs, or images)'));
+      return next(new Error('At least one folder must contain content (videos, PDFs, images, text content, or external videos)'));
     }
   } else {
     // Fallback: validate old structure if no folders

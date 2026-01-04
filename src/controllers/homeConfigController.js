@@ -35,6 +35,65 @@ const getHomeConfig = async (req, res, next) => {
         journeyImage: {
           url: '/assets/journey.svg',
           fileId: ''
+        },
+        pedagogySection: {
+          principles: [
+            {
+              title: 'Principle-Based Learning',
+              description: 'We teach the why behind the what. Understand the core mechanics, material science, and physics so your skills are software-agnostic and enduring.'
+            },
+            {
+              title: 'Project-Centric Application',
+              description: 'Knowledge without application is theory. Every course includes real-world projects with downloadable files, datasets, and challenges that mirror professional workflows.'
+            },
+            {
+              title: 'Expert-Led Instruction',
+              description: 'Learn from the best. Our instructors are active industry professionals, lead engineers, and PhDs who bring current, real-world insights directly to you.'
+            },
+            {
+              title: 'Community of Practice',
+              description: 'Join a global network of peers. Collaborate, solve problems, and share knowledge in our exclusive forums and live Q&A sessions.'
+            }
+          ]
+        },
+        coreValuesSection: {
+          values: [
+            {
+              name: 'Excellence',
+              description: 'We are relentlessly committed to the highest standards in content, instruction, and user experience.'
+            },
+            {
+              name: 'Clarity',
+              description: 'We break down complexity into clear, understandable, and actionable lessons.'
+            },
+            {
+              name: 'Integrity',
+              description: 'We teach proven, validated methods. Our goal is your success, not just course completion.'
+            },
+            {
+              name: 'Innovation',
+              description: 'We continuously evolve our curriculum to include the latest tools and methodologies, from Generative Design to Advanced Composites.'
+            }
+          ]
+        },
+        whyChooseUsSection: {
+          features: [
+            {
+              icon: '🚀',
+              title: 'Industry Experts',
+              description: 'Learn from professionals at SpaceX, Apple, Tesla, and more'
+            },
+            {
+              icon: '⚡',
+              title: 'Hands-On Projects',
+              description: 'Build real-world projects that showcase your skills'
+            },
+            {
+              icon: '🎯',
+              title: 'Career Ready',
+              description: 'Get job-ready skills that employers are actively seeking'
+            }
+          ]
         }
       });
     }
@@ -184,11 +243,59 @@ const updateHeroText = async (req, res, next) => {
   }
 };
 
+/**
+ * @desc    Update homepage content section
+ * @route   PUT /api/home-config/content/:sectionName
+ * @access  Private (Admin only)
+ */
+const updateContentSection = async (req, res, next) => {
+  try {
+    const { sectionName } = req.params;
+    const updateData = req.body;
+
+    const validSections = [
+      'missionSection',
+      'missionVisionSection',
+      'pedagogySection',
+      'coreValuesSection',
+      'joinJourneySection',
+      'whyChooseUsSection',
+      'instructorsSection'
+    ];
+
+    if (!validSections.includes(sectionName)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid section name'
+      });
+    }
+
+    let config = await HomeConfig.findOne();
+    
+    if (!config) {
+      config = await HomeConfig.create({});
+    }
+
+    config[sectionName] = updateData;
+    await config.save();
+
+    res.status(200).json({
+      success: true,
+      message: `${sectionName} updated successfully`,
+      data: config
+    });
+  } catch (error) {
+    console.error('Update content section error:', error);
+    next(error);
+  }
+};
+
 module.exports = {
   getHomeConfig,
   updateHomeConfig,
   updateHomeImage,
   updateHomeStats,
-  updateHeroText
+  updateHeroText,
+  updateContentSection
 };
 

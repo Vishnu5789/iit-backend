@@ -7,7 +7,8 @@ const {
   updateHomeConfig,
   updateHomeImage,
   updateHomeStats,
-  updateHeroText
+  updateHeroText,
+  updateContentSection
 } = require('../controllers/homeConfigController');
 
 // Public route
@@ -18,6 +19,7 @@ router.put('/', protect, checkAdmin, updateHomeConfig);
 router.put('/image/:imageType', protect, checkAdmin, updateHomeImage);
 router.put('/stats', protect, checkAdmin, updateHomeStats);
 router.put('/hero-text', protect, checkAdmin, updateHeroText);
+router.put('/content/:sectionName', protect, checkAdmin, updateContentSection);
 
 module.exports = router;
 
