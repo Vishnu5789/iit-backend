@@ -142,11 +142,74 @@ const deleteCourse = async (req, res, next) => {
   }
 };
 
+/**
+ * @desc    Get public statistics for a course
+ * @route   GET /api/courses/:id/stats
+ * @access  Public
+ */
+const getCoursePublicStats = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+
+    const course = await Course.findById(id);
+    if (!course) {
+      return res.status(404).json({
+        success: false,
+        message: 'Course not found'
+      });
+    }
+
+    // Get enrollment count
+    const User = require('../models/User');
+    const enrollmentCount = await User.countDocuments({
+      enrolledCourses: id
+    });
+
+    // Get recent enrollments (last 7 days)
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    
+    const recentEnrollments = await User.countDocuments({
+      enrolledCourses: id,
+      createdAt: { $gte: sevenDaysAgo }
+    });
+
+    // Determine popularity badge
+    let popularityBadge = null;
+    if (recentEnrollments >= 10) popularityBadge = 'Trending';
+    if (enrollmentCount >= 100) popularityBadge = 'Bestseller';
+    
+    const thirtyDaysAgo = new Date(Date.now() - 30*24*60*60*1000);
+    const isNew = new Date(course.createdAt) > thirtyDaysAgo;
+    if (isNew && !popularityBadge) popularityBadge = 'New';
+
+    res.status(200).json({
+      success: true,
+      data: {
+        enrollmentCount,
+        recentEnrollments,
+        averageRating: course.averageRating || 0,
+        totalReviews: course.totalReviews || 0,
+        popularityBadge,
+        lastUpdated: course.updatedAt,
+        completionRate: 0, // Implement based on your progress tracking
+        level: course.level,
+        duration: course.duration
+      }
+    });
+
+  } catch (error) {
+    console.error('Get public stats error:', error);
+    next(error);
+  }
+};
+
 module.exports = {
   getCourses,
   getCourse,
   createCourse,
   updateCourse,
-  deleteCourse
+  deleteCourse,
+  getCoursePublicStats
 };
 

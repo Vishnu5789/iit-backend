@@ -5,7 +5,8 @@ const {
   getCourse,
   createCourse,
   updateCourse,
-  deleteCourse
+  deleteCourse,
+  getCoursePublicStats
 } = require('../controllers/courseController');
 const { protect } = require('../middleware/auth');
 const { checkAdmin } = require('../middleware/adminAuth');
@@ -13,6 +14,7 @@ const { checkAdmin } = require('../middleware/adminAuth');
 // Public routes
 router.get('/', getCourses);
 router.get('/:id', getCourse);
+router.get('/:id/stats', getCoursePublicStats); // Public course statistics
 
 // Protected admin routes
 router.post('/', protect, checkAdmin, createCourse);

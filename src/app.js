@@ -28,6 +28,7 @@ const aboutSectionRoutes = require('./routes/aboutSectionRoutes');
 const admissionRoutes = require('./routes/admissionRoutes');
 const webinarRoutes = require('./routes/webinarRoutes');
 const blogSubscriberRoutes = require('./routes/blogSubscriberRoutes');
+const resourceRoutes = require('./routes/resources');
 
 const app = express();
 
@@ -221,6 +222,7 @@ app.use('/api/about-sections', aboutSectionRoutes);
 app.use('/api/admissions', admissionRoutes);
 app.use('/api/webinar', webinarRoutes);
 app.use('/api/blog-subscribers', blogSubscriberRoutes);
+app.use('/api/resources', resourceRoutes);
 
 // 404 handler - catch all unmatched routes
 app.use((req, res) => {
