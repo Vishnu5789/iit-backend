@@ -29,6 +29,7 @@ const admissionRoutes = require('./routes/admissionRoutes');
 const webinarRoutes = require('./routes/webinarRoutes');
 const blogSubscriberRoutes = require('./routes/blogSubscriberRoutes');
 const resourceRoutes = require('./routes/resources');
+const coursePageRoutes = require('./routes/coursePageRoutes');
 
 const app = express();
 
@@ -162,8 +163,9 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+// Increase payload size limit to handle large course content
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 // Session middleware (required for Passport)
 app.use(session({
@@ -223,6 +225,7 @@ app.use('/api/admissions', admissionRoutes);
 app.use('/api/webinar', webinarRoutes);
 app.use('/api/blog-subscribers', blogSubscriberRoutes);
 app.use('/api/resources', resourceRoutes);
+app.use('/api/course-page', coursePageRoutes);
 
 // 404 handler - catch all unmatched routes
 app.use((req, res) => {
