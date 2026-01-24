@@ -79,6 +79,17 @@ const uploadFile = async (req, res, next) => {
       });
     }
 
+    // Validate image file size (max 15MB for images)
+    const isImage = req.file.mimetype && req.file.mimetype.startsWith('image/');
+    const MAX_IMAGE_SIZE = 15 * 1024 * 1024; // 15MB
+    
+    if (isImage && req.file.size > MAX_IMAGE_SIZE) {
+      return res.status(400).json({
+        success: false,
+        message: `Image size should be less than 15MB. Your file is ${Math.round(req.file.size / 1024 / 1024)}MB`
+      });
+    }
+
     const { folder = 'courses' } = req.body;
     
     // Generate unique filename
