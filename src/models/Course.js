@@ -12,10 +12,13 @@ const courseSchema = new mongoose.Schema({
     required: [true, 'Please provide a course description'],
     maxlength: [1000, 'Description cannot exceed 1000 characters']
   },
+  syllabusText: {
+    type: String,
+    default: ''
+  },
   syllabus: {
     url: {
       type: String,
-      required: [true, 'Please upload course syllabus'],
       default: ''
     },
     fileId: {
@@ -153,6 +156,84 @@ const courseSchema = new mongoose.Schema({
         default: 'other'
       },
       uploadedAt: {
+        type: Date,
+        default: Date.now
+      }
+    }],
+    subfolders: [{
+      folderName: {
+        type: String,
+        required: true,
+        trim: true
+      },
+      videos: [{
+        name: String,
+        url: String,
+        fileId: String,
+        duration: String,
+        uploadedAt: {
+          type: Date,
+          default: Date.now
+        }
+      }],
+      pdfs: [{
+        name: String,
+        url: String,
+        fileId: String,
+        uploadedAt: {
+          type: Date,
+          default: Date.now
+        }
+      }],
+      images: [{
+        url: String,
+        fileId: String,
+        uploadedAt: {
+          type: Date,
+          default: Date.now
+        }
+      }],
+      textContent: [{
+        title: {
+          type: String,
+          required: true,
+          trim: true
+        },
+        content: {
+          type: String,
+          required: true
+        },
+        uploadedAt: {
+          type: Date,
+          default: Date.now
+        }
+      }],
+      externalVideoLinks: [{
+        title: {
+          type: String,
+          required: true,
+          trim: true
+        },
+        url: {
+          type: String,
+          required: true,
+          trim: true
+        },
+        description: {
+          type: String,
+          default: ''
+        },
+        platform: {
+          type: String,
+          enum: ['youtube', 'vimeo', 'other'],
+          default: 'other'
+        },
+        uploadedAt: {
+          type: Date,
+          default: Date.now
+        }
+      }],
+      createdAt: {
         type: Date,
         default: Date.now
       }

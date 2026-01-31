@@ -89,6 +89,10 @@ const quizSchema = new mongoose.Schema({
     type: Boolean,
     default: true
   },
+  isFree: {
+    type: Boolean,
+    default: false // false = paid quiz (requires enrollment), true = free quiz (requires login only)
+  },
   order: {
     type: Number,
     default: 0

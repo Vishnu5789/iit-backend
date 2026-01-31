@@ -12,8 +12,12 @@ const {
   createQuiz,
   updateQuiz,
   deleteQuiz,
-  getQuizAttempts
+  getQuizAttempts,
+  getFreeQuizzes
 } = require('../controllers/quizController');
+
+// Public route (no auth) - Get free quizzes for a course
+router.get('/course/:courseId/free', getFreeQuizzes);
 
 // Student routes (protected)
 router.get('/course/:courseId', protect, getCourseQuizzes);

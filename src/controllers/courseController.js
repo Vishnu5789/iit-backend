@@ -72,6 +72,17 @@ const createCourse = async (req, res, next) => {
     // Add user ID to req.body
     req.body.createdBy = req.user.id;
 
+    // Validate syllabus: at least one format (PDF or text) must be provided
+    const hasPdfSyllabus = req.body.syllabus?.url;
+    const hasTextSyllabus = req.body.syllabusText?.trim();
+    
+    if (!hasPdfSyllabus && !hasTextSyllabus) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please provide course syllabus in PDF format, text format, or both'
+      });
+    }
+
     const course = await Course.create(req.body);
 
     res.status(201).json({

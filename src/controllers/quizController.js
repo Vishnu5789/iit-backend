@@ -2,7 +2,39 @@ const Quiz = require('../models/Quiz');
 const QuizAttempt = require('../models/QuizAttempt');
 const Course = require('../models/Course');
 
-// Get all quizzes for a course (Student view - active only)
+// Get free quizzes for a course (No auth required - for preview)
+exports.getFreeQuizzes = async (req, res) => {
+  try {
+    const { courseId } = req.params;
+    
+    console.log('🆓 Fetching free quizzes for course:', courseId);
+    
+    const quizzes = await Quiz.find({ 
+      course: courseId, 
+      isActive: true,
+      isFree: true
+    })
+      .sort({ order: 1, createdAt: 1 })
+      .select('-questions.correctAnswer -questions.options.isCorrect -questions.explanation'); // Hide answers and explanations
+    
+    console.log('🆓 Free quizzes found:', quizzes.length);
+    
+    res.json({
+      success: true,
+      count: quizzes.length,
+      data: quizzes
+    });
+  } catch (error) {
+    console.error('❌ Error fetching free quizzes:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch free quizzes',
+      error: error.message
+    });
+  }
+};
+
+// Get all quizzes for a course (Student view - active only, paid quizzes)
 exports.getCourseQuizzes = async (req, res) => {
   try {
     const { courseId } = req.params;
@@ -11,8 +43,9 @@ exports.getCourseQuizzes = async (req, res) => {
     
     const allQuizzes = await Quiz.find({ course: courseId });
     console.log('📝 Total quizzes found:', allQuizzes.length);
-    console.log('📝 All quizzes:', allQuizzes.map(q => ({ title: q.title, isActive: q.isActive })));
+    console.log('📝 All quizzes:', allQuizzes.map(q => ({ title: q.title, isActive: q.isActive, isFree: q.isFree })));
     
+    // For enrolled users, show all active quizzes (both free and paid)
     const quizzes = await Quiz.find({ 
       course: courseId, 
       isActive: true 
@@ -231,12 +264,36 @@ exports.submitQuiz = async (req, res) => {
       console.log('📝 Points earned:', pointsEarned);
       totalPointsEarned += pointsEarned;
       
+      // Get correct answer text for display
+      let correctAnswerText = '';
+      let userAnswerText = '';
+      
+      if (question.questionType === 'multiple-choice') {
+        const selectedOption = question.options[userAnswer.selectedOption];
+        userAnswerText = selectedOption?.text || 'No answer';
+        
+        // Find the correct option(s)
+        const correctOptions = question.options.filter(opt => opt.isCorrect);
+        correctAnswerText = correctOptions.map(opt => opt.text).join(', ');
+      } else if (question.questionType === 'true-false') {
+        userAnswerText = userAnswer.answer || 'No answer';
+        correctAnswerText = question.correctAnswer || '';
+      } else {
+        userAnswerText = userAnswer.answer || 'No answer';
+        correctAnswerText = question.correctAnswer || '';
+      }
+      
       gradedAnswers.push({
         questionId: userAnswer.questionId,
+        questionText: question.questionText,
         selectedOption: userAnswer.selectedOption,
         answer: userAnswer.answer,
+        userAnswer: userAnswerText,
+        correctAnswer: correctAnswerText,
+        explanation: question.explanation || '',
         isCorrect,
         pointsEarned,
+        totalPoints: question.points,
         timeSpent: userAnswer.timeSpent || 0
       });
     });
